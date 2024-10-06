@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Garen Spin Calculator</title>
+
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <div id="level">
+        <h2>1. Select Level</h2>
+        <input type="number" id="championLevel" min="1" max="18" value="1" />
+      </div>
+
+      <div id="spin">
+        <h2>2. Select E Ability Rank</h2>
+        <input type="number" min="1" max="5" value="1" id="eRank" />
+      </div>
+
+      <div id="items">
+        <h2>3. Select Items</h2>
+
+        <div id="squares">
+          <div class="item"></div>
+          <div class="item"></div>
+          <div class="item"></div>
+          <div class="item"></div>
+          <div class="item"></div>
+          <div class="item"></div>
+        </div>
+      </div>
+    </main>
+
+    <aside>
+      <div id="spin-info">
+        <h2>Spins: <span id="spinCount">7</span></h2>
+        <h2>DMG per spin: <span id="dmgPerSpin">0</span></h2>
+        <h2>Total E DMG: <span id="totalEDmg">0</span></h2>
+      </div>
+      <div id="stats">
+        <div class="row">
+          <img src="images/AD.png" alt="icon" />
+          <span id="adValue">69</span>
+        </div>
+        <div class="row">
+          <img src="images/attack-speed.webp" alt="icon" />
+          <span id="asValue">0.625 / 0%</span>
+        </div>
+      </div>
+    </aside>
+
+    <dialog id="itemModal">
+      <div class="modal-content">
+        <h2>Select an Item</h2>
+        <!-- Items will be dynamically added here -->
+      </div>
+    </dialog>
+
+    <script>
+      // Constants for Garen
+      const baseAD = 69; // Garen's base AD
+      const growthAD = 4.5; // Garen's AD growth per level
+
+      const baseAS = 0.625; // Garen's base attack speed
+      const ASRatio = 0.625; // Garen's attack speed ratio (same as base AS)
+      const growthAS = 3.65; // Garen's attack speed growth per level (3.65% per level)
+
+      // Track selected items and their bonuses
+      let selectedItems = [null, null, null, null, null, null]; // Array to store selected items
+
+      // Example items with their stats
+      const items = [
+        {
+          id: 1,
+          name: "Infinity Edge",
+          ad: 70,
+          as: 0,
+          image: "items/Infinity_Edge_item_HD.webp",
+        },
+        {
+          id: 2,
+          name: "Phantom Dancer",
+          ad: 0,
+          as: 60,
+          image: "items/Phantom_Dancer_item_HD.webp",
+        },
+        {
+          id: 3,
+          name: "Kraken Slayer",
+          ad: 45,
+          as: 40,
+          image: "items/Kraken_Slayer_item_HD.webp",
+        },
+        {
+          id: 4,
+          name: "Blade of the Ruined King",
+          ad: 40,
+          as: 25,
+          image: "items/Blade_of_the_Ruined_King_item_HD.webp",
+        },
+        {
+          id: 5,
+          name: "Berserker's Greaves",
+          ad: 0,
+          as: 35,
+          image: "items/Berserkers_Greaves_item_HD.webp",
+        },
+        {
+          id: 6,
+          name: "Stridebreaker",
+          ad: 40,
+          as: 25,
+          image: "items/Stridebreaker_item_HD.webp",
+        },
+        {
+          id: 6,
+          name: "The Collector",
+          ad: 60,
+          as: 0,
+          image: "items/The_Collector_item_HD.webp",
+        },
+      ];
+
+      // Function to calculate AD
+      function calculateAD(level, bonusAD = 0) {
+        const levelUps = level - 1; // Number of level-ups
+        const growthFactor = 0.7025 + 0.0175 * levelUps;
+
+        // Formula: AD = base + bonus + (growthAD * (level - 1) * growthFactor)
+        const totalAD = baseAD + bonusAD + growthAD * levelUps * growthFactor;
+
+        return totalAD.toFixed(2); // Return the AD value rounded to 2 decimal places
+      }
+
+      // Function to calculate Attack Speed (AS) and return bonus AS values
+      function calculateAS(level, bonusASPercent = 0) {
+        const levelUps = level - 1; // Number of level-ups
+        const growthFactor = 0.7025 + 0.0175 * levelUps;
+
+        // Formula for bonus attack speed from levels: growthAS * (level - 1) * growthFactor
+        const bonusASFromLevels = growthAS * levelUps * growthFactor;
+
+        // Total bonus attack speed (from levels + items)
+        const totalBonusAS = bonusASFromLevels + bonusASPercent;
+
+        // Formula: AS = baseAS + [(bonusASFromLevels + bonusASPercent) / 100] * ASRatio
+        const totalAS = baseAS + (totalBonusAS / 100) * ASRatio;
+
+        return {
+          totalAS: totalAS.toFixed(3), // Attack speed rounded to 3 decimal places
+          bonusASFromLevels: bonusASFromLevels.toFixed(3), // Bonus AS from levels
+          totalBonusAS: totalBonusAS.toFixed(3), // Total bonus AS (levels + items)
+        };
+      }
+
+      // Function to calculate number of spins (rounded down to nearest integer)
+      function calculateSpins(bonusASPercent) {
+        return Math.floor(7 + bonusASPercent / 25);
+      }
+
+      // Function to calculate damage per spin
+      function calculateDamagePerSpin(level, eRank, AD) {
+        const rankDamage = [4, 8, 12, 16, 20]; // Base damage per rank
+        const ADScaling = [0.36, 0.37, 0.38, 0.39, 0.4]; // AD scaling per rank
+
+        // Damage based on level scaling (0.8 per level until level 9, then 0.2)
+        let levelBonusDamage;
+        if (level <= 9) {
+          levelBonusDamage = (level - 1) * 0.8;
+        } else {
+          levelBonusDamage = 8 * 0.8 + (level - 9) * 0.2;
+        }
+
+        // Total damage per spin = base rank damage + level scaling + AD scaling
+        const totalDamagePerSpin =
+          rankDamage[eRank - 1] + levelBonusDamage + ADScaling[eRank - 1] * AD;
+
+        return totalDamagePerSpin.toFixed(2);
+      }
+
+      // Function to calculate total bonus AD and AS from selected items
+      function getBonusStatsFromItems() {
+        let bonusAD = 0;
+        let bonusAS = 0;
+
+        // Sum up all the AD and AS bonuses from selected items
+        selectedItems.forEach((item) => {
+          if (item) {
+            bonusAD += item.ad;
+            bonusAS += item.as;
+          }
+        });
+
+        return { bonusAD, bonusAS };
+      }
+
+      // Event handler for updating the stats
+      function updateStats() {
+        const levelInput = document.getElementById("championLevel");
+        const eRankInput = document.getElementById("eRank");
+        const adValueElement = document.getElementById("adValue");
+        const asValueElement = document.getElementById("asValue");
+        const spinCountElement = document.getElementById("spinCount");
+        const dmgPerSpinElement = document.getElementById("dmgPerSpin");
+        const totalEDmgElement = document.getElementById("totalEDmg");
+
+        // Get the level and E rank input values
+        const level = parseInt(levelInput.value) || 1;
+        const eRank = parseInt(eRankInput.value) || 1;
+
+        // Get bonus stats from selected items
+        const { bonusAD, bonusAS } = getBonusStatsFromItems();
+
+        // Calculate the AD and AS
+        const totalAD = calculateAD(level, bonusAD);
+        const ASResults = calculateAS(level, bonusAS);
+
+        // Update the displayed AD and AS values
+        adValueElement.textContent = totalAD;
+        asValueElement.textContent = `${ASResults.totalAS} / ${ASResults.totalBonusAS}%`;
+
+        // Calculate number of spins and damage per spin
+        const totalSpins = calculateSpins(ASResults.totalBonusAS);
+        const damagePerSpin = calculateDamagePerSpin(level, eRank, totalAD);
+
+        // Update the displayed spins and damage
+        spinCountElement.textContent = totalSpins;
+        dmgPerSpinElement.textContent = damagePerSpin;
+        totalEDmgElement.textContent = (totalSpins * damagePerSpin).toFixed(2);
+      }
+
+      // Add event listeners
+      document
+        .getElementById("championLevel")
+        .addEventListener("input", updateStats);
+      document.getElementById("eRank").addEventListener("input", updateStats);
+
+      // Initial update when the page loads
+      updateStats();
+
+      //MODAL LOGIC
+      const itemSlots = document.querySelectorAll(".item"); // All item slots
+      const itemModal = document.getElementById("itemModal"); // Modal element
+      const modalContent = document.querySelector(".modal-content"); // Modal content inside dialog
+
+      let selectedSlot = null; // Track the clicked item slot
+
+      // Open the modal when an item slot is clicked
+      itemSlots.forEach((slot, index) => {
+        slot.addEventListener("click", () => {
+          selectedSlot = index; // Set the currently selected item slot
+          openModal();
+        });
+      });
+
+      // Function to open the modal
+      function openModal() {
+        itemModal.showModal(); // Native method to open the dialog
+        displayItems(); // Populate the modal with items
+      }
+
+      // Function to close the modal
+      function closeModal() {
+        itemModal.close(); // Native method to close the dialog
+        selectedSlot = null;
+      }
+
+      // Function to display items in the modal
+      function displayItems() {
+        modalContent.innerHTML = "<h2>Select an Item</h2>"; // Clear previous items and add title
+
+        // Loop through the items array and add them to the modal
+        items.forEach((item) => {
+          const itemElement = document.createElement("div");
+          itemElement.classList.add("item-option");
+          itemElement.innerHTML = `
+      <img src="images/${item.image}" alt="${item.name}">
+      <span>${item.name}</span>
+    `;
+          modalContent.appendChild(itemElement);
+
+          // Add click event listener to select item
+          itemElement.addEventListener("click", () => {
+            selectItem(item); // Pass the selected item
+          });
+        });
+      }
+
+      // Function to select an item
+      function selectItem(item) {
+        if (selectedSlot !== null) {
+          // Update the selected item in the slots
+          const itemSlot = itemSlots[selectedSlot];
+          itemSlot.innerHTML = `<img src="images/${item.image}" alt="${item.name}">`;
+
+          // Update the selectedItems array
+          selectedItems[selectedSlot] = item;
+
+          // Recalculate stats
+          updateStats();
+          closeModal(); // Close the modal after selection
+        }
+      }
+
+      // Add event listener to close the modal when clicking outside the modal content
+      window.addEventListener("click", (event) => {
+        if (event.target === itemModal) {
+          closeModal();
+        }
+      });
+    </script>
+  </body>
+</html>
