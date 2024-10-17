@@ -1,448 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Garen Spin Calculator</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Garen Spin Calculator</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main>
+    <div id="level">
+      <h2>1. Select Level</h2>
+      <input type="number" id="championLevel" min="1" max="18" value="1" />
+    </div>
 
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <main>
-      <div id="level">
-        <h2>1. Select Level</h2>
-        <input type="number" id="championLevel" min="1" max="18" value="1" />
+    <div id="spin">
+      <h2>2. Select E Ability Rank</h2>
+      <input type="number" min="1" max="5" value="1" id="eRank" />
+    </div>
+
+    <div id="items">
+      <h2>3. Select Items</h2>
+      <div id="squares">
+        <div class="item"></div>
+        <div class="item"></div>
+        <div class="item"></div>
+        <div class="item"></div>
+        <div class="item"></div>
+        <div class="item"></div>
       </div>
+    </div>
+  </main>
 
-      <div id="spin">
-        <h2>2. Select E Ability Rank</h2>
-        <input type="number" min="1" max="5" value="1" id="eRank" />
+  <aside>
+    <div id="spin-info">
+      <h2>Spins: <span id="spinCount">7</span></h2>
+      <h2>DMG per spin: <span id="dmgPerSpin">0</span> / <img src="images/judgment.webp"><span id="closestDmgPerSpin">0</span> </h2>
+      <h2>Total E DMG: <span id="totalEDmg">0</span> / <img src="images/judgment.webp"><span id="closestTotalEDmg">0</span> </h2>
+    </div>
+    <div id="stats">
+      <div class="row">
+        <img src="images/AD.png" alt="icon" />
+        <span id="adValue">69</span>
       </div>
-
-      <div id="items">
-        <h2>3. Select Items</h2>
-
-        <div id="squares">
-          <div class="item"></div>
-          <div class="item"></div>
-          <div class="item"></div>
-          <div class="item"></div>
-          <div class="item"></div>
-          <div class="item"></div>
-        </div>
+      <div class="row">
+        <img src="images/attack-speed.webp" alt="icon" />
+        <span id="asValue">0.625 / 0%</span>
       </div>
-    </main>
+    </div>
+  </aside>
 
-    <aside>
-      <div id="spin-info">
-        <h2>Spins: <span id="spinCount">7</span></h2>
-        <h2>DMG per spin: <span id="dmgPerSpin">0</span></h2>
-        <h2>Total E DMG: <span id="totalEDmg">0</span></h2>
+  <dialog id="itemModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Select an Item</h2>
+        <input type="text" id="itemSearch" placeholder="Search items..." />
       </div>
-      <div id="stats">
-        <div class="row">
-          <img src="images/AD.png" alt="icon" />
-          <span id="adValue">69</span>
-        </div>
-        <div class="row">
-          <img src="images/attack-speed.webp" alt="icon" />
-          <span id="asValue">0.625 / 0%</span>
-        </div>
+      <div class="modal-body">
+        <!-- Items will be dynamically added here -->
       </div>
-    </aside>
+    </div>
+  </dialog>
 
-    <dialog id="itemModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Select an Item</h2>
-          <input type="text" id="itemSearch" placeholder="Search items..." />
-        </div>
-        <div class="modal-body">
-          <!-- Items will be dynamically added here -->
-        </div>
-      </div>
-    </dialog>
-
-    <script>
-      // Constants for Garen
-      const baseAD = 69; // Garen's base AD
-      const growthAD = 4.5; // Garen's AD growth per level
-
-      const baseAS = 0.625; // Garen's base attack speed
-      const ASRatio = 0.625; // Garen's attack speed ratio (same as base AS)
-      const growthAS = 3.65; // Garen's attack speed growth per level (3.65% per level)
-
-      // Track selected items and their bonuses
-      let selectedItems = [null, null, null, null, null, null]; // Array to store selected items
-
-      // Example items with their stats
-      const items = [
-        {
-          id: 1,
-          name: "Stridebreaker",
-          ad: 40,
-          as: 25,
-          image: "Stridebreaker_item_HD.webp",
-        },
-        {
-          id: 2,
-          name: "Phantom Dancer",
-          ad: 0,
-          as: 60,
-          image: "Phantom_Dancer_item_HD.webp",
-        },
-        {
-          id: 3,
-          name: "Bloodthirster",
-          ad: 80,
-          as: 0,
-          image: "Bloodthirster_item_HD.webp",
-        },
-        {
-          id: 4,
-          name: "Blade of the Ruined King",
-          ad: 40,
-          as: 25,
-          image: "Blade_of_the_Ruined_King_item_HD.webp",
-        },
-        {
-          id: 5,
-          name: "Berserker's Greaves",
-          ad: 0,
-          as: 25,
-          image: "Berserkers_Greaves_item_HD.webp",
-        },
-        {
-          id: 6,
-          name: "Death's Dance",
-          ad: 60,
-          as: 0,
-          image: "Deaths_Dance_item_HD.webp",
-        },
-        {
-          id: 7,
-          name: "Experimental Hexplate",
-          ad: 40,
-          as: 20,
-          image: "Experimental_Hexplate_item_HD.webp",
-        },
-        {
-          id: 8,
-          name: "Guinsoo's Rageblade",
-          ad: 30,
-          as: 25,
-          image: "Guinsoos_Rageblade_item_HD.webp",
-        },
-        {
-          id: 9,
-          name: "Infinity Edge",
-          ad: 70,
-          as: 0,
-          image: "Infinity_Edge_item_HD.webp",
-        },
-        {
-          id: 10,
-          name: "Kraken Slayer",
-          ad: 45,
-          as: 40,
-          image: "Kraken_Slayer_item_HD.webp",
-        },
-        {
-          id: 11,
-          name: "Mercurial Scimitar",
-          ad: 40,
-          as: 0,
-          image: "Mercurial_Scimitar_item_HD.webp",
-        },
-        {
-          id: 12,
-          name: "Mortal Reminder",
-          ad: 35,
-          as: 0,
-          image: "Mortal_Reminder_item_HD.webp",
-        },
-        {
-          id: 13,
-          name: "Navori Flickerblade",
-          ad: 0,
-          as: 40,
-          image: "Navori_Flickerblade_item_HD.webp",
-        },
-        {
-          id: 14,
-          name: "Nashor's Tooth",
-          ad: 0,
-          as: 50,
-          image: "Nashors_Tooth_item_HD.webp",
-        },
-        {
-          id: 15,
-          name: "Rapid Firecannon",
-          ad: 0,
-          as: 35,
-          image: "Rapid_Firecannon_item_HD.webp",
-        },
-        {
-          id: 16,
-          name: "Ravenous Hydra",
-          ad: 65,
-          as: 0,
-          image: "Ravenous_Hydra_item_HD.webp",
-        },
-        {
-          id: 17,
-          name: "Spear of Shojin",
-          ad: 45,
-          as: 0,
-          image: "Spear_of_Shojin_item_HD.webp",
-        },
-        {
-          id: 18,
-          name: "Statikk Shiv",
-          ad: 50,
-          as: 35,
-          image: "Statikk_Shiv_item_HD.webp",
-        },
-        {
-          id: 19,
-          name: "Sundered Sky",
-          ad: 40,
-          as: 0,
-          image: "Sundered_Sky_item_HD.webp",
-        },
-        {
-          id: 20,
-          name: "Terminus",
-          ad: 30,
-          as: 35,
-          image: "Terminus_item_HD.webp",
-        },
-        {
-          id: 21,
-          name: "The Collector",
-          ad: 60,
-          as: 0,
-          image: "The_Collector_item_HD.webp",
-        },
-        {
-          id: 22,
-          name: "Wit's End",
-          ad: 0,
-          as: 50,
-          image: "Wits_End_item_HD.webp",
-        },
-      ];
-
-      // Function to calculate AD
-      function calculateAD(level, bonusAD = 0) {
-        const levelUps = level - 1; // Number of level-ups
-        const growthFactor = 0.7025 + 0.0175 * levelUps;
-        const totalAD = baseAD + bonusAD + growthAD * levelUps * growthFactor;
-        return totalAD.toFixed(2); // Return the AD value rounded to 2 decimal places
-      }
-
-      // Function to calculate Attack Speed (AS) and return bonus AS values
-      function calculateAS(level, bonusASPercent = 0) {
-        const levelUps = level - 1; // Number of level-ups
-        const growthFactor = 0.7025 + 0.0175 * levelUps;
-        const bonusASFromLevels = growthAS * levelUps * growthFactor;
-        const totalBonusAS = bonusASFromLevels + bonusASPercent;
-        const totalAS = baseAS + (totalBonusAS / 100) * ASRatio;
-        return {
-          totalAS: totalAS.toFixed(3), // Attack speed rounded to 3 decimal places
-          bonusASFromLevels: bonusASFromLevels.toFixed(3), // Bonus AS from levels
-          totalBonusAS: totalBonusAS.toFixed(3), // Total bonus AS (levels + items)
-        };
-      }
-
-      // Function to calculate number of spins (rounded down to nearest integer)
-      function calculateSpins(bonusASPercent) {
-        return Math.floor(7 + bonusASPercent / 25);
-      }
-
-      // Function to calculate damage per spin
-      function calculateDamagePerSpin(level, eRank, AD) {
-        const rankDamage = [4, 8, 12, 16, 20]; // Base damage per rank
-        const ADScaling = [0.36, 0.37, 0.38, 0.39, 0.4]; // AD scaling per rank
-        let levelBonusDamage;
-
-        if (level <= 9) {
-          levelBonusDamage = (level - 1) * 0.8;
-        } else {
-          levelBonusDamage = 8 * 0.8 + (level - 9) * 0.2;
-        }
-
-        const totalDamagePerSpin =
-          rankDamage[eRank - 1] + levelBonusDamage + ADScaling[eRank - 1] * AD;
-        return totalDamagePerSpin.toFixed(2);
-      }
-
-      // Function to calculate total bonus AD and AS from selected items
-      function getBonusStatsFromItems() {
-        let bonusAD = 0;
-        let bonusAS = 0;
-        selectedItems.forEach((item) => {
-          if (item) {
-            bonusAD += item.ad;
-            bonusAS += item.as;
-          }
-        });
-        return { bonusAD, bonusAS };
-      }
-
-      // Function to enforce max limits for inputs
-      function enforceLimits() {
-        const levelInput = document.getElementById("championLevel");
-        const eRankInput = document.getElementById("eRank");
-
-        // Validate champion level
-        if (parseInt(levelInput.value) < 1) {
-          levelInput.value = 1; // Reset to min if below
-        } else if (parseInt(levelInput.value) > 18) {
-          levelInput.value = 18; // Reset to max if above
-        }
-
-        // Validate E ability rank
-        if (parseInt(eRankInput.value) < 1) {
-          eRankInput.value = 1; // Reset to min if below
-        } else if (parseInt(eRankInput.value) > 5) {
-          eRankInput.value = 5; // Reset to max if above
-        }
-      }
-
-      // Event handler for updating the stats
-      function updateStats() {
-        const levelInput = document.getElementById("championLevel");
-        const eRankInput = document.getElementById("eRank");
-        const adValueElement = document.getElementById("adValue");
-        const asValueElement = document.getElementById("asValue");
-        const spinCountElement = document.getElementById("spinCount");
-        const dmgPerSpinElement = document.getElementById("dmgPerSpin");
-        const totalEDmgElement = document.getElementById("totalEDmg");
-
-        // First, enforce limits before reading the values
-        enforceLimits();
-
-        const level = parseInt(levelInput.value) || 1;
-        const eRank = parseInt(eRankInput.value) || 1;
-
-        const { bonusAD, bonusAS } = getBonusStatsFromItems();
-        const totalAD = calculateAD(level, bonusAD);
-        const ASResults = calculateAS(level, bonusAS);
-
-        adValueElement.textContent = totalAD;
-        asValueElement.textContent = `${ASResults.totalAS} / ${ASResults.totalBonusAS}%`;
-
-        const totalSpins = calculateSpins(ASResults.totalBonusAS);
-        const damagePerSpin = calculateDamagePerSpin(level, eRank, totalAD);
-
-        spinCountElement.textContent = totalSpins;
-        dmgPerSpinElement.textContent = damagePerSpin;
-        totalEDmgElement.textContent = (totalSpins * damagePerSpin).toFixed(2);
-      }
-
-      // Add event listeners
-      document.getElementById("championLevel").addEventListener("input", () => {
-        enforceLimits(); // Enforce limits on input change
-        updateStats();
-      });
-      document.getElementById("eRank").addEventListener("input", () => {
-        enforceLimits(); // Enforce limits on input change
-        updateStats();
-      });
-
-      // Initial update when the page loads
-      updateStats();
-
-      // MODAL LOGIC
-      const itemSlots = document.querySelectorAll(".item"); // All item slots
-      const itemModal = document.getElementById("itemModal"); // Modal element
-      const modalContent = document.querySelector(".modal-content"); // Modal content inside dialog
-      let selectedSlot = null; // Track the clicked item slot
-
-      // Open the modal when an item slot is clicked
-      itemSlots.forEach((slot, index) => {
-        slot.addEventListener("click", () => {
-          selectedSlot = index; // Set the currently selected item slot
-          openModal();
-        });
-      });
-
-      // Function to open the modal
-      function openModal() {
-        itemModal.showModal(); // Native method to open the dialog
-        displayItems(); // Populate the modal with items
-      }
-
-      // Function to close the modal
-      function closeModal() {
-        itemModal.close(); // Native method to close the dialog
-        selectedSlot = null;
-      }
-
-      // Function to display items in the modal
-      function displayItems() {
-        modalContent.innerHTML =
-          "<h2>Select an Item</h2> <input type='text' id='itemSearch' placeholder='Search items...' />"; // Clear previous items and add title
-
-        // Loop through the items array and add them to the modal
-        items.forEach((item) => {
-          const itemElement = document.createElement("div");
-          itemElement.classList.add("item-option");
-          itemElement.innerHTML = `
-            <img src="images/items/${item.image}" alt="${item.name}">
-            <div class="item_flex">
-              <span>${item.name}</span>
-              <div>
-                <p><img src="images/AD.png"><span>${item.ad}</span> &nbsp; <img src="images/attack-speed.webp"><span>${item.as}%</span></p>
-              </div>
-            </div>
-          `;
-          modalContent.appendChild(itemElement);
-
-          // Add click event listener to select item
-          itemElement.addEventListener("click", () => {
-            selectItem(item); // Pass the selected item
-          });
-        });
-
-        // Add search functionality
-        const searchInput = document.getElementById("itemSearch");
-        searchInput.addEventListener("input", () => {
-          const filter = searchInput.value.toLowerCase();
-          const itemOptions = document.querySelectorAll(".item-option");
-
-          itemOptions.forEach((item) => {
-            const itemName = item
-              .querySelector("span")
-              .textContent.toLowerCase();
-            item.style.display = itemName.includes(filter) ? "flex" : "none"; // Show or hide items based on filter
-          });
-        });
-      }
-
-      // Function to select an item
-      function selectItem(item) {
-        if (selectedSlot !== null) {
-          // Update the selected item in the slots
-          const itemSlot = itemSlots[selectedSlot];
-          itemSlot.innerHTML = `<img src="images/items/${item.image}" alt="${item.name}">`;
-
-          // Update the selectedItems array
-          selectedItems[selectedSlot] = item;
-
-          // Recalculate stats
-          updateStats();
-          closeModal(); // Close the modal after selection
-        }
-      }
-
-      // Add event listener to close the modal when clicking outside the modal content
-      window.addEventListener("click", (event) => {
-        if (event.target === itemModal) {
-          closeModal();
-        }
-      });
-    </script>
-  </body>
+  <script src="scripts/itemAPI.js"></script>
+  <script src="scripts/calculator.js"></script>
+  <script src="scripts/modal.js"></script>
+  <script src="scripts/app.js"></script>
+</body>
 </html>
