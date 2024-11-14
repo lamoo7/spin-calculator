@@ -1,57 +1,95 @@
-// Constants for Garen
+// calculator.js
+
+// Constants for Garen's base stats and growth
 const baseAD = 69;
 const growthAD = 4.5;
 const baseAS = 0.625;
 const ASRatio = 0.625;
 const growthAS = 3.65;
 
-function calculateAD(level, bonusAD = 0) {
+// Calculate level-based AD
+function calculateLevelBasedAD(level) {
   const levelUps = level - 1;
   const growthFactor = 0.7025 + 0.0175 * levelUps;
-  const totalAD = baseAD + bonusAD + growthAD * levelUps * growthFactor;
-  return totalAD.toFixed(2);
+  return baseAD + growthAD * levelUps * growthFactor;
 }
 
-function calculateAS(level, bonusASPercent = 0) {
+// Calculate level-based AS
+function calculateLevelBasedAS(level) {
   const levelUps = level - 1;
   const growthFactor = 0.7025 + 0.0175 * levelUps;
   const bonusASFromLevels = growthAS * levelUps * growthFactor;
-  const totalBonusAS = bonusASFromLevels + bonusASPercent;
-  const totalAS = baseAS + (totalBonusAS / 100) * ASRatio;
   return {
-    totalAS: totalAS.toFixed(3),
-    bonusASFromLevels: bonusASFromLevels.toFixed(3),
-    totalBonusAS: totalBonusAS.toFixed(3),
+    levelBasedAS: baseAS + (bonusASFromLevels / 100) * ASRatio,
+    levelBonusAS: bonusASFromLevels
   };
 }
 
-function calculateSpins(bonusASPercent) {
-  return Math.floor(7 + bonusASPercent / 25);
+// Calculate total AD by combining level-based and item AD
+function calculateTotalAD(levelBasedAD, itemAD) {
+  return levelBasedAD + itemAD;
 }
 
-function calculateDamagePerSpin(level, eRank, AD) {
+// Calculate total AS by combining level-based and item AS
+function calculateTotalAS(levelBonusAS, itemASPercent) {
+  const totalBonusAS = levelBonusAS + itemASPercent;
+  return baseAS + (totalBonusAS / 100) * ASRatio;
+}
+
+// Calculate spin count
+function calculateSpinCountFromAS(totalBonusAS) {
+  return Math.floor(7 + totalBonusAS / 25);
+}
+
+// Calculate damage per spin with level and item AD, factoring in crit
+function calculateDamagePerSpin(level, eRank, totalAD, critDamage) {
   const rankDamage = [4, 8, 12, 16, 20];
   const ADScaling = [0.36, 0.37, 0.38, 0.39, 0.4];
-  
   let levelBonusDamage = level <= 9 ? (level - 1) * 0.8 : 8 * 0.8 + (level - 9) * 0.2;
-  
-  const baseDamagePerSpin = rankDamage[eRank - 1] + levelBonusDamage + ADScaling[eRank - 1] * AD;
-  const closestEnemyDamagePerSpin = baseDamagePerSpin * 1.25; // Nearest enemy takes 25% more damage
-  
+
+  // Base damage per spin without crit
+  const baseDamagePerSpin = rankDamage[eRank - 1] + levelBonusDamage + ADScaling[eRank - 1] * totalAD;
+
+  // Crit damage per spin with crit multiplier
+  const critMultiplier = critDamage / 100;
+  const dmgPerCritSpin = baseDamagePerSpin * critMultiplier;
+
+  // Calculate the closest target bonus (25%) for both regular and crit spins
+  const closestDmgPerSpin = baseDamagePerSpin * 1.25;
+  const closestDmgPerCritSpin = dmgPerCritSpin * 1.25;
+
   return {
-    baseDamagePerSpin: baseDamagePerSpin.toFixed(2),
-    closestEnemyDamagePerSpin: closestEnemyDamagePerSpin.toFixed(2),
+      baseDamagePerSpin: baseDamagePerSpin.toFixed(2),
+      dmgPerCritSpin: dmgPerCritSpin.toFixed(2),
+      closestDmgPerSpin: closestDmgPerSpin.toFixed(2),
+      closestDmgPerCritSpin: closestDmgPerCritSpin.toFixed(2)
   };
 }
 
-function getBonusStatsFromItems(selectedItems) {
-  let bonusAD = 0;
-  let bonusAS = 0;
-  selectedItems.forEach((item) => {
-    if (item) {
-      bonusAD += item.ad;
-      bonusAS += item.as;
-    }
-  });
-  return { bonusAD, bonusAS };
+
+// Function to calculate total E ability damage, factoring in crits and closest target bonus
+function calculateTotalEDamage(spins, baseDamagePerSpin, critChance, critDamage) {
+  // Calculate the expected number of crit spins based on critChance
+  const critSpins = Math.floor(spins * (critChance / 100));
+  const regularSpins = spins - critSpins;
+
+  // Calculate damage for regular spins
+  const regularDamage = regularSpins * baseDamagePerSpin;
+
+  // Calculate damage for crit spins with crit multiplier
+  const critMultiplier = critDamage / 100;
+  const critDamageTotal = critSpins * baseDamagePerSpin * critMultiplier;
+
+  // Total damage including regular and crit spins
+  const totalDamage = regularDamage + critDamageTotal;
+
+  // Calculate 25% bonus damage for the closest target
+  const closestTargetTotalDamage = totalDamage * 1.25;
+
+  return {
+      totalDamage: totalDamage.toFixed(2),
+      closestTargetTotalDamage: closestTargetTotalDamage.toFixed(2),
+      critSpins,
+      regularSpins
+  };
 }

@@ -1,69 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Garen Spin Calculator</title>
-  <link rel="stylesheet" href="css/style.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Garen Spin Calculator</title>
+    <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
-  <main>
-    <div id="level">
-      <h2>1. Select Level</h2>
-      <input type="number" id="championLevel" min="1" max="18" value="1" />
+
+    <!-- THIS IS WHERE THE USER SELECTS THE STATS OF GAREN -->
+    <div class="main">
+        <h1>. Select <img id="garen" src="img/48px-Garen_OriginalCircle.webp" /> Champion Level</h1>
+        <input type="number" id="championLevel" min="1" max="18" value="1" />
+        <h1>. Select <img id="eability" src="img/Garen_Judgment.png" /> Ability Rank </h1>
+        <input type="number" min="1" max="5" value="1" id="eRank" />
+        <h1>. Select <img id="gold" src="img/Your_Cut_item.png" /> Items</h1>
+        <div id="items">
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+            <div class="item"></div>
+        </div>
     </div>
 
-    <div id="spin">
-      <h2>2. Select E Ability Rank</h2>
-      <input type="number" min="1" max="5" value="1" id="eRank" />
+    <!-- THIS IS WHERE THE USER SELECTS THE ARMOR OF THE ENEMY CHAMP -->
+    <div class="main">
+        <h1>. Select <img id="enemy" src="img/helmet_bro.png" /> Enemy Armor Amount</h1>
+        <img id="dummy" src="img/Enemy_Target_Dummy-f4ab72b7.png" />
+        <input type="text" min="1" value="feature not added yet :(" id="enemyArmor" />
+        <p>Set the armor value to 0 to<br>calculate the raw damage of the spin</p>
     </div>
 
-    <div id="items">
-      <h2>3. Select Items</h2>
-      <div id="squares">
-        <div class="item"></div>
-        <div class="item"></div>
-        <div class="item"></div>
-        <div class="item"></div>
-        <div class="item"></div>
-        <div class="item"></div>
-      </div>
+    <!-- RESULTS -->
+    <div class="main">
+        <fieldset>
+            <legend>Results</legend>
+        
+            <h2>Spins: <span id="spinCount">7</span> </h2>
+        
+            <h2>DMG per spin:
+                <div>
+                    <span id="dmgPerSpin">0</span>
+                    /<img src="img/judgment.webp">
+                    <span id="closestDmgPerSpin">0</span>
+                </div>
+            </h2>
+        
+            <h2><span id="crit-spin-row"><img id="crit-spin" src="img/Critical_strike_icon.webp">&nbsp;spin:</span>
+                <div>
+                    <span id="dmgPerCritSpin">0</span>
+                    /<img src="img/judgment.webp">
+                    <span id="closestDmgPerCritSpin">0</span>
+                </div>
+            </h2>
+        
+            <h2>Total E DMG:
+                <div>
+                    <span id="totalEDmg">0</span>
+                    /<img src="img/judgment.webp">
+                    <span id="closestTotalEDmg">0</span>
+                </div>
+            </h2>
+        
+            <div id="stats">
+                <div class="row">
+                    <img src="img/AD.png" alt="Attack Damage" />
+                    <h2 id="adValue">69</h2>
+                </div>
+                <div class="row">
+                    <img src="img/attack-speed.webp" alt="Attack Speed" />
+                    <h2 id="asValue">0.625 / 0%</h2>
+                </div>
+                <div class="row">
+                    <img src="img/Critical_strike_icon.webp" alt="Crit Strike Chance / Crit Strike Damage" />
+                    <h2 id="critValue">0% / 175%</h2>
+                </div>
+            </div>
+        </fieldset>
+        
     </div>
-  </main>
 
-  <aside>
-    <div id="spin-info">
-      <h2>Spins: <span id="spinCount">7</span></h2>
-      <h2>DMG per spin: <span id="dmgPerSpin">0</span> / <img src="images/judgment.webp"><span id="closestDmgPerSpin">0</span> </h2>
-      <h2>Total E DMG: <span id="totalEDmg">0</span> / <img src="images/judgment.webp"><span id="closestTotalEDmg">0</span> </h2>
-    </div>
-    <div id="stats">
-      <div class="row">
-        <img src="images/AD.png" alt="icon" />
-        <span id="adValue">69</span>
-      </div>
-      <div class="row">
-        <img src="images/attack-speed.webp" alt="icon" />
-        <span id="asValue">0.625 / 0%</span>
-      </div>
-    </div>
-  </aside>
+    <dialog id="itemModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Select an Item</h2>
+                <input type="text" id="itemSearch" placeholder="Search items..." />
+            </div>
+            <div class="modal-body">
+                <!-- Items will be dynamically added here -->
+            </div>
+        </div>
+    </dialog>
 
-  <dialog id="itemModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Select an Item</h2>
-        <input type="text" id="itemSearch" placeholder="Search items..." />
-      </div>
-      <div class="modal-body">
-        <!-- Items will be dynamically added here -->
-      </div>
-    </div>
-  </dialog>
-
-  <script src="scripts/itemAPI.js"></script>
-  <script src="scripts/calculator.js"></script>
-  <script src="scripts/modal.js"></script>
-  <script src="scripts/app.js"></script>
+    <script src="scripts/itemAPI.js"></script>
+    <script src="scripts/calculator.js"></script>
+    <script src="scripts/modal.js"></script>
+    <script src="scripts/app.js"></script>
 </body>
+
 </html>
