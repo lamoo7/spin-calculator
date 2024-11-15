@@ -60,6 +60,8 @@ function renderItems(items) {
         ${item.as ? `<span class="item-stats"><img src="img/attack-speed.webp" alt="AS"> ${item.as}%</span>` : ""}
         ${item.critChance ? `<span class="item-stats"><img src="img/Critical_strike_icon.webp" alt="Crit Chance"> ${item.critChance}%</span>` : ""}
         ${item.critDamage ? `<span class="item-stats"><img src="img/crit-damage.png" alt="Crit Damage"> ${item.critDamage}%</span>` : ""}
+        ${item.lethality ? `<span class="item-stats"><img src="img/armor_pen.png" alt="Lethality"> ${item.lethality}</span>` : ""}
+        ${item.pen ? `<span class="item-stats"><img src="img/armor_pen.png" alt="%PEN"> ${item.pen}%</span>` : ""}
       </div>
     `;
 
@@ -72,9 +74,14 @@ function renderItems(items) {
   });
 }
 
-// Function to set selected item in the clicked slot
 function selectItem(item) {
   if (selectedSlotIndex !== null) {
+    // Check if the item being selected has Pen and another Pen item is already selected
+    if (item.pen && selectedItems.some(selectedItem => selectedItem?.pen)) {
+      alert("You can only have one item with Percent Armor Penetration.");
+      return; // Prevent selection
+    }
+
     // Set the selected item in the selected slot
     selectedItems[selectedSlotIndex] = item;
 

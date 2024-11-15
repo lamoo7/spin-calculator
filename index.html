@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Garen Spin Calculator</title>
+    <link rel="shortcut icon" href="img/Garen_Judgment.png" type="image/x-icon" />
     <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -31,7 +32,7 @@
     <div class="main">
         <h1>. Select <img id="enemy" src="img/helmet_bro.png" /> Enemy Armor Amount</h1>
         <img id="dummy" src="img/Enemy_Target_Dummy-f4ab72b7.png" />
-        <input type="text" min="1" value="feature not added yet :(" id="enemyArmor" />
+        <input type="number" min="0" value="0" id="enemyArmor" />
         <p>Set the armor value to 0 to<br>calculate the raw damage of the spin</p>
     </div>
 
@@ -78,6 +79,10 @@
                 <div class="row">
                     <img src="img/Critical_strike_icon.webp" alt="Crit Strike Chance / Crit Strike Damage" />
                     <h2 id="critValue">0% / 175%</h2>
+                </div>
+                <div class="row">
+                    <img src="img/armor_pen.png" alt="Lethality / % Armor Penetration" />
+                    <h2 id="penValue">0 / 0%</h2>
                 </div>
             </div>
         </fieldset>

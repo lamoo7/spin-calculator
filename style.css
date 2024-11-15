@@ -194,7 +194,6 @@ dialog::-webkit-scrollbar-thumb {
 .item-row img {
   width: 70px;
   height: 70px;
-  margin-right: 10px;
 }
 
 .item-info img {
@@ -219,4 +218,9 @@ h4{
 
 h2 #crit-spin-row {
   display: flex;
+}
+
+.item-image{
+  height: 70px;
+  margin-right: 10px;
 }
